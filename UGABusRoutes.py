@@ -2,23 +2,9 @@
 # 2) Add a Night Campus and Weekender Bus routes option
 # 6) Make program more accessible (Web app or phone app)
 
-import pyautogui
+from flask import Flask, render_template, request
 
-All_places = ["Aderhold","BDM Hall","Botanical Gardens","Building F","Building G","Building H","Building P",
-        "Building Q","Building S","Brandon Oaks","Broad Street Studios", 
-        "CCRC","Chemistry","Chicopee","Clarke Central","Conner Hall","Correll Hall","Coverdell",
-        "Creswell Hall","Driftmier","East Campus Village","Food Science",
-        "Gilbert Hall","Greenhouses","Health Science Campus","Henderson Ave.","I-Fields (College Station",
-        "Intramural Fields","Intramural Fields Deck","Intramural Fields Lot EO1","Jamestown",
-        "Joe Frank Harris","Learning & Development","Lucy Cobb","Rutherord St",
-        "Main Library","Memorial Hall","Multi-Modal Center","Myers Quad","Nacoochee Ave.",
-        "Newton St.","Oakland Ave.","Oglethorpe Dining","Park and Ride","Peabody St.","Physics"
-        "Plant Science","Poultry Diagnostic & Rsch Center","Presbyterian Center","Psychology-Journalism",
-        "Rivers Crossing","Rogers Rd","Russell Hall","Rutherford Hall","Rutherford St.",
-        "School of Social Work","Science Learning Center","Snelling Dining","Soccer Softball"
-        "Spring St.","Springdale St.","Stegeman Coliseum","STEM Building","Tate Center",
-        "The Arch","Transit","Tucker Hall","UGA Automotive Center","UGA Human Resources",
-        "University Health Center","Veterinary Medical Learning Center","Waddell St."]
+app = Flask(__name__)
 
 CentralLoopStops = ["Memorial Hall","Tate Center","Gilbert Hall","The Arch","Arch","Main Library","Tucker Hall",
         "Joe Frank Harris","University Health Center","UHC","East Campus Village","Aderhold Hall",
@@ -77,23 +63,19 @@ popularStops = ["Conner Hall","Correll Hall (Closest to Lipscomb/Bolton)","Joe F
 for route in UGABusRoutes:
         UGABusRoutes[route] = [stop.lower() for stop in UGABusRoutes[route]]
 
-while True:
-        position = pyautogui.prompt(text='These are some popular stops: '+ str(popularStops), title='Where are you?',default='')
-        if position == "exit" or position == "quit":
-                break
-        destination = pyautogui.prompt(text='These are some popular stops: '+ str(popularStops),title='Where are you going?',default='')
-        if destination == "exit" or destination == "quit":
-                break
-        PossibleRoutes = []
+@app.route('/', methods=["GET","POST"])
+def home():
+        if request.method == "POST":
+                position = (str)(request.form["position"])
+                destination = (str)(request.form["destination"])
+                PossibleRoutes = []
+                for route in UGABusRoutes:
+                        if position.lower().strip() in UGABusRoutes[route] and destination.lower().strip() in UGABusRoutes[route]:
+                                PossibleRoutes.append(route)
+                
+                return render_template("base.html", PossibleRoutes=PossibleRoutes)
+        if request.method == "GET":
+                return render_template("base.html", PossibleRoutes=[])
 
-        for route in UGABusRoutes:
-                if position.lower().strip() in UGABusRoutes[route] and destination.lower().strip() in UGABusRoutes[route]:
-                        PossibleRoutes.append(route)
-
-        if len(PossibleRoutes) == 0:
-                pyautogui.alert(text='Unfortunately, there are no routes that fufill your request.',title='Possible Routes',button='OK')
-        else:     
-                pyautogui.alert(text='These are the possible routes you can take: '+str(PossibleRoutes),title='Possible Routes',button='OK')
-
-        if pyautogui.confirm(text='Do you have any more queries?',title='Would you like to continue?',buttons=['No','Yes']) == "No":
-                break
+if __name__ == "__main__":
+        app.run(debug=True)
